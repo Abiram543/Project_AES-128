@@ -23,7 +23,7 @@ initial begin
     
     @(negedge crypto_clk);
     @(negedge crypto_clk);
-    @(negedge crypto_clk);
+    
     key_in = 128'ha0fafe1788542cb123a339392a6c7605;
     @(negedge crypto_clk);
     key_in = 128'hf2c295f27a96b9435935807a7359f67f;

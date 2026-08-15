@@ -6,7 +6,7 @@ module AES_Datapath_v2 (
 //------------Control signals from Controller---------//
     input wire [2:0] ARK_sel,
     input wire [1:0] SB_sel, state_sel,
-    input wire SR_sel, ISR_sel, MC_sel, IMC_sel, Data_sel, mode_sel, out_sel, ARK_key_sel,
+    input wire SR_sel, ISR_sel, MC_sel, IMC_sel, Data_sel, mode_sel, out_sel, key_sel,
 //--------------Data output from AES------//    
     output wire [127:0] Data_out,
 //--------------To the controller---------//
@@ -14,7 +14,7 @@ module AES_Datapath_v2 (
 );
 
 //---------------Temporory wires--------------------//
-wire [127:0] Data_in_reg, Data_out_reg, mode_in_reg, mode_out_reg, state_in, state_reg;
+wire [127:0] Data_in_reg, Data_out_reg, mode_in_reg, mode_out_reg, key_in_reg, key_out_reg, state_in, state_reg;
 wire [127:0] ARK_A, ARK_key, ARK_Q;
 wire [127:0] SB_A, SB_Q, SR_A, SR_Q, MC_A, MC_Q, IMC_A, IMC_Q, ISR_A, ISR_Q;
 
@@ -24,6 +24,8 @@ wire [127:0] SB_A, SB_Q, SR_A, SR_Q, MC_A, MC_Q, IMC_A, IMC_Q, ISR_A, ISR_Q;
 Reg_128 I1(.crypto_clk(crypto_clk), .crypto_rstn(crypto_rstn), .D_in(Data_in_reg), .D_out(Data_out_reg));
 
 Reg_1   I2(.crypto_clk(crypto_clk), .crypto_rstn(crypto_rstn), .D_in(mode_in_reg), .D_out(mode_out_reg));
+
+Reg_128 I3(.crypto_clk(crypto_clk), .crypto_rstn(crypto_rstn), .D_in(key_in_reg), .D_out(key_out_reg));
 
 //-----------------Add Round Key------------------//
 AddRoundKey U1(.A(ARK_A), .key(ARK_key), .Q(ARK_Q));
@@ -51,8 +53,10 @@ assign Data_in_reg = Data_sel ? Data_in : Data_out_reg;
 
 assign mode_in_reg = mode_sel ? mode : mode_out_reg;
 
+assign key_in_reg = key_sel ? key_in : key_out_reg;
+
 assign ARK_A = (ARK_sel == 3'd1) ? Data_out_reg : (ARK_sel == 3'd3) ? SR_Q : (ARK_sel == 3'd2) ? MC_Q : (ARK_sel == 3'd4) ? state_reg : 'b0;
-assign ARK_key = ARK_key_sel ? key_in : 'b0;
+assign ARK_key = key_out_reg;
 
 assign SB_A = (SB_sel == 2'd1) ? state_reg : (SB_sel == 2'd2) ? ARK_Q : (SB_sel == 2'd3) ? IMC_Q : 'b0;
 

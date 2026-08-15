@@ -5,7 +5,7 @@ module AES_Controller_v2 (
 //-------------Generating Control Signals----------------//    
     output reg [2:0] ARK_sel,
     output reg [1:0] SB_sel, state_sel,
-    output reg SR_sel, ISR_sel, MC_sel, IMC_sel, Data_sel, mode_sel, out_sel, ARK_key_sel,
+    output reg SR_sel, ISR_sel, MC_sel, IMC_sel, Data_sel, mode_sel, out_sel, key_sel,
 //-------------status signal---------------//    
     output reg done
 );
@@ -67,7 +67,7 @@ always @(posedge crypto_clk or negedge crypto_rstn) begin
 end
 
 assign temp1 = (PS == R1_9);
-assign temp2 = (roundVal == 4'd9);
+assign temp2 = (roundVal == 4'd8);
 
 //---------------Output control signals logic--------------//
 always @(*) begin
@@ -83,7 +83,7 @@ always @(*) begin
             mode_sel = 0;
             state_sel = 'b0;
             out_sel = 0;
-            ARK_key_sel = 0;
+            key_sel = 0;
             done = 1;
         end 
         INIT: begin
@@ -97,7 +97,7 @@ always @(*) begin
             mode_sel = 1;
             state_sel = 'b0;
             out_sel = 0;
-            ARK_key_sel = 0;
+            key_sel = 1;
             done = 0;
         end
         R0: begin
@@ -105,7 +105,7 @@ always @(*) begin
             mode_sel = 0;
             done = 0;
             out_sel = 0;
-            ARK_key_sel = 1;
+            key_sel = 1;
             if (mode) begin
                 ARK_sel = 3'b001;    // Selecting only AddRoundKey for Initial transformation
                 SB_sel  = 'b0;
@@ -129,7 +129,7 @@ always @(*) begin
             Data_sel = 0;
             mode_sel = 0;
             done = 0;
-            ARK_key_sel = 1;
+            key_sel = 1;
             out_sel = 0;
             if (mode) begin         // Encryption mode
                 ARK_sel = 3'b010;
@@ -156,7 +156,7 @@ always @(*) begin
             state_sel = 2'b01;
             done = 0;
             out_sel = 0;
-            ARK_key_sel = 1;
+            key_sel = 0;
             if (mode) begin
                 ARK_sel = 3'b011;
                 SB_sel  = 2'b01;
@@ -185,7 +185,7 @@ always @(*) begin
             mode_sel = 0;
             state_sel = 'b0;
             out_sel = 1;
-            ARK_key_sel = 0;
+            key_sel = 0;
             done = 1;
         end
         default: begin
@@ -199,7 +199,7 @@ always @(*) begin
             mode_sel = 0;
             state_sel = 'b0;
             out_sel = 0;
-            ARK_key_sel = 0;
+            key_sel = 0;
             done = 0;
         end
     endcase
