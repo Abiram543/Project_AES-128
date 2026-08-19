@@ -19,7 +19,7 @@ initial begin
     @(negedge crypto_clk);
     start = 1; mode = 0;
     key_in = 128'hd014f9a8c9ee2589e13f0cc8b6630ca6;
-    Data_in = 128'h3ad77bb40d7a3660a89ecaf32466ef97;
+    Data_in = 128'hf5d3d58503b9699de785895a96fdbaaf;
     
     @(negedge crypto_clk);
     @(negedge crypto_clk);

@@ -19,7 +19,7 @@ initial begin
     @(negedge crypto_clk);
     start = 1; mode = 1;
     key_in = 128'h2B7E151628AED2A6ABF7158809CF4F3C;
-    Data_in = 128'h6BC1BEE22E409F96E93D7E117393172A;
+    Data_in = 128'hae2d8a571e03ac9c9eb76fac45af8e51;
     
     @(negedge crypto_clk);
     @(negedge crypto_clk);
@@ -55,5 +55,11 @@ initial begin
     $monitor(" ciphertxt = %h, done = %b\n", Data_out, done);
     $monitor("time = %t | AddRoundKey=%h | SubBytes=%h | ShiftRows=%h | MixCol=%h | state_reg = %h\n", $time, dut.AES_Dtp.U1.Q, dut.AES_Dtp.U2.Q, dut.AES_Dtp.U3.Q, dut.AES_Dtp.U4.Q, dut.AES_Dtp.O1.D_out);
 end
-
+initial begin
+    $dumpfile("aes_encryption_tb.vcd");
+    $dumpvars(0, tb_AES_core);
+end
 endmodule
+
+
+
