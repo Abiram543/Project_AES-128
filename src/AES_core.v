@@ -14,7 +14,7 @@ wire [2:0] ARK_sel, IARK_sel;
 wire [1:0] SB_sel, state_sel;
 wire SR_sel, ISR_sel, MC_sel, IMC_sel, Data_sel, mode_sel, mode_wire, out_sel, ARK_key_sel, IARK_key_sel;
 
-AES_Controller_v2 AES_Ctrl(.crypto_clk(crypto_clk), 
+AES_Controller AES_Ctrl(.crypto_clk(crypto_clk), 
                            .crypto_rstn(crypto_rstn), 
                            .start(start), 
                            .mode(mode_wire), 
@@ -34,7 +34,7 @@ AES_Controller_v2 AES_Ctrl(.crypto_clk(crypto_clk),
                            .done(done)
                            );
 
-AES_Datapath_v2 AES_Dtp(.crypto_clk(crypto_clk), 
+AES_Datapath AES_Dtp(.crypto_clk(crypto_clk), 
                         .crypto_rstn(crypto_rstn), 
                         .mode(mode), 
                         .key_in(key_in), 

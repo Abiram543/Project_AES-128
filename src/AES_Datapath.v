@@ -1,4 +1,4 @@
-module AES_Datapath_v2 (
+module AES_Datapath (
     input wire crypto_clk, crypto_rstn,
     input wire mode,                // mode = 1 -> Encryption | mode = 0 -> Decryption
     input wire [127:0] key_in,      // round key from Key scheduler
