@@ -1,7 +1,7 @@
 module Rcon (
     input wire [3:0] round,
     input wire mode,
-    output wire [31:0] Rcon
+    output reg [31:0] Rcon
 );
 always @(*) begin
     if (mode) begin
