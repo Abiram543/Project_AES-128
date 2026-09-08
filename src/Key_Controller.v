@@ -2,7 +2,8 @@ module Key_Controller (
     input wire crypto_clk, crypto_rstn,
     input wire start, key_lock,
     output reg [3:0] Wr_Addr,
-    output reg start_aes, key_reg_sel, write_en, key_store_done, KE_sel
+    output wire start_aes,
+    output reg key_reg_sel, write_en, key_store_done, KE_sel
 );
 //-------------parameterization-------//
 localparam IDLE     = 2'd0,
@@ -42,7 +43,6 @@ end
 always @(*) begin
     case (PS)
         IDLE: begin
-            start_aes = 0;
             Wr_Addr = 4'd0;
             KE_sel = 0;
             write_en = 0;
@@ -50,7 +50,6 @@ always @(*) begin
             key_store_done = 0;
         end 
         INIT: begin
-            start_aes = 0;
             Wr_Addr = 4'd1;
             KE_sel = 0;
             key_reg_sel = 0;    // It will select the original key value
@@ -58,7 +57,6 @@ always @(*) begin
             key_store_done = 0;
         end
         STORE: begin
-            start_aes = 0;
             Wr_Addr = roundVal;
             KE_sel = 1;
             key_reg_sel = 1;
@@ -66,7 +64,6 @@ always @(*) begin
             key_store_done = 0;
         end
         DONE: begin
-            start_aes = 1;
             key_store_done = 1;
             KE_sel = 0;
             key_reg_sel = 0;
@@ -74,7 +71,6 @@ always @(*) begin
             Wr_Addr = 4'd0;
         end
         default: begin
-            start_aes = 0;
             key_reg_sel = 0;
             KE_sel = 0;
             Wr_Addr = 4'd0;
@@ -104,5 +100,8 @@ end
 // Temp assignments to overcome lint errors
 assign Round_state = (PS == INIT) || (PS == STORE);
 assign count11 = (roundVal == 4'd11);    // roundVal 0-10
+
+//Control signal for start the aes_core part
+assign start_aes = count11 ? 1'b1 : 1'b0;
 
 endmodule

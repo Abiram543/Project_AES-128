@@ -12,9 +12,9 @@ assign w1 = key_in[95:64];
 assign w2 = key_in[63:32];
 assign w3 = key_in[31:0];
 
-Rcon U1(.round(roundVal), .mode(mode), .Rcon(Rcon));
+Rcon Rconst(.round(roundVal), .mode(mode), .Rcon(Rcon));
 
-gbox U2(.word(w3), .Rcon(Rcon), .mode(mode), .gout(gout));
+gbox Gbox(.word(w3), .Rcon(Rcon), .mode(mode), .gout(gout));
 
 assign key_out[127:96] = gout ^ w0;
 assign key_out[95:64]  = key_out[127:96] ^ w1;

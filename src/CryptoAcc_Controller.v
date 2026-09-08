@@ -1,12 +1,12 @@
 module CryptoAcc_Controller (
     input wire crypto_clk, crypto_rstn,
-    input wire mode,
-    input wire start, start_aes, next_process,
-    input wire key_lock, zeroize,
+    input wire start, start_aes,
     input wire fifo_empty_flag,
     output reg [3:0] Rd_Addr,
     output reg read_en, busy_flag, done_flag
 );
+/*INternal wire */
+wire next_process;
 
 /* local parameterization */
 localparam IDLE      = 2'd0,
@@ -31,7 +31,7 @@ end
 /* Next state logic */
 always @(*) begin
     case (PS)
-        IDLE:       NS = start ? (written ? AES_Round : Key_INIT) : IDLE;
+        IDLE:       NS = start ? Key_INIT : IDLE;
         Key_INIT:   NS = start_aes ? AES_Round : Key_INIT;
         AES_Round:  NS = next_process ? AES_Round : Done;
         Done:       NS = IDLE;
@@ -42,6 +42,7 @@ end
 /* Next process logic */
 assign next_process = !fifo_empty_flag;     // The next process value direct opp. of the empty_flag value of the Tx FIFO.
 
+reg [3:0] count;
 /* Counter for 11 cycles 0-11*/
 always @(posedge crypto_clk or negedge crypto_rstn) begin
     if (!crypto_rstn) begin

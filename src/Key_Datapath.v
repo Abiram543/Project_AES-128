@@ -9,13 +9,30 @@ module Key_Datapath (
 
 wire [127:0] KE_in, KE_out, KR_in, KR_out, reg_in, reg_out;
 
-KeyExpansion U1(.key_in(KE_in), .mode(mode), .roundVal(Wr_Addr), .key_out(KE_out));
+KeyExpansion KExp(.key_in(KE_in), 
+                  .mode(mode), 
+                  .roundVal(Wr_Addr), 
+                  .key_out(KE_out)
+                );
 
-Key_ROM U2(.crypto_clk(crypto_clk), .crypto_rstn(crypto_rstn), .zeroize(zeroize), .write_en(write_en), 
-           .key_lock(key_lock), .read_en(read_en), .write_data(KR_in), .read_data(KR_out), .Wr_Addr(Wr_Addr), .Rd_Addr(Rd_Addr));
+Key_ROM KRom(.crypto_clk(crypto_clk), 
+             .crypto_rstn(crypto_rstn), 
+             .zeroize(zeroize), 
+             .write_en(write_en), 
+             .key_lock(key_lock), 
+             .read_en(read_en), 
+             .write_data(KR_in), 
+             .read_data(KR_out), 
+             .Wr_Addr(Wr_Addr), 
+             .Rd_Addr(Rd_Addr)
+             );
 
 //------------------------Key Register for feedback---------------------------------------------//
-Reg_128 K1(.crypto_clk(crypto_clk), .crypto_rstn(crypto_rstn), .D_in(reg_in), .D_out(reg_out));
+Reg_128 R128(.crypto_clk(crypto_clk), 
+             .crypto_rstn(crypto_rstn), 
+             .D_in(reg_in), 
+             .D_out(reg_out)
+             );
 
 
 assign KE_in = KE_sel ? reg_out : 'b0;
