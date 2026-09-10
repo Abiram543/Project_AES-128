@@ -5,12 +5,12 @@ module Core_top (
     input wire [127:0] private_key,
     input wire [127:0] Data_in,
     output wire [127:0] Data_out,
-    output wire busy_flag, done_flag
+    output wire busy_flag, done_flag, aes_done
 );
 
-wire start_aes, key_store_done, aes_done, key_written;
+wire start_aes, key_store_done, key_written;
 
-// Module Instantiation
+
 CryptoAcc_Controller Cryp_Ctrl (.crypto_clk(crypto_clk), 
                                 .crypto_rstn(crypto_rstn), 
                                 .start(start), 
