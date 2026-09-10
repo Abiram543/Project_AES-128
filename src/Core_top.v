@@ -10,7 +10,7 @@ module Core_top (
 
 wire start_aes, key_store_done, aes_done, key_written;
 
-
+// Module Instantiation
 CryptoAcc_Controller Cryp_Ctrl (.crypto_clk(crypto_clk), 
                                 .crypto_rstn(crypto_rstn), 
                                 .start(start), 

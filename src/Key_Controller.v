@@ -3,8 +3,8 @@ module Key_Controller (
     input wire start, key_lock,
     input wire key_written,
     output reg [3:0] Wr_Addr,
-    output wire start_aes,
-    output reg key_reg_sel, write_en, key_store_done, 
+    output reg key_reg_sel, write_en, 
+    output wire key_store_done, 
     output reg KE_sel
 );
 //-------------parameterization-------//
@@ -49,24 +49,20 @@ always @(*) begin
             KE_sel = 0;
             write_en = 0;
             key_reg_sel = 0;
-            key_store_done = 0;
         end 
         INIT: begin
             Wr_Addr = 'b0;
             KE_sel = 0;
             key_reg_sel = 0;    // It will select the original key value
             write_en = 0;
-            key_store_done = 0;
         end
         STORE: begin
             Wr_Addr = roundVal;
             KE_sel = 1;
             key_reg_sel = 1;
             write_en = 1;
-            key_store_done = 0;
         end
         DONE: begin
-            key_store_done = 1;
             KE_sel = 0;
             key_reg_sel = 0;
             write_en = 0;
@@ -77,7 +73,6 @@ always @(*) begin
             KE_sel = 0;
             Wr_Addr = 4'd0;
             write_en = 0;
-            key_store_done = 0;
         end
     endcase
 end
@@ -104,6 +99,6 @@ assign Round_state = (PS == STORE);
 assign count11 = (roundVal == 4'd11);    // roundVal 0-10
 
 //Control signal for start the aes_core part
-assign start_aes = (PS == DONE);
+assign key_store_done = (PS == DONE);
 
 endmodule

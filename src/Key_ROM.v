@@ -11,19 +11,37 @@ module Key_ROM (
 reg [127:0] Key_MEM [0:11];
 
 //Temporory Vars//
-integer i;
+reg [3:0] i;
 
 //Write Logic//
 always @(posedge crypto_clk or negedge crypto_rstn) begin
     if(!crypto_rstn) begin
-        for (i = 0; i < 12; i = i + 1) begin
-            Key_MEM[i] <= 'b0;
-        end
+        Key_MEM[0]  <= 'b0;
+        Key_MEM[1]  <= 'b0;
+        Key_MEM[2]  <= 'b0;
+        Key_MEM[3]  <= 'b0;
+        Key_MEM[4]  <= 'b0;
+        Key_MEM[5]  <= 'b0;
+        Key_MEM[6]  <= 'b0;
+        Key_MEM[7]  <= 'b0;
+        Key_MEM[8]  <= 'b0;
+        Key_MEM[9]  <= 'b0;
+        Key_MEM[10] <= 'b0;
+        Key_MEM[11] <= 'b0;
     end
     else if(zeroize) begin
-        for (i = 0; i < 12; i = i + 1) begin
-            Key_MEM[i] <= 'b0;
-        end
+        Key_MEM[0]  <= 'b0;
+        Key_MEM[1]  <= 'b0;
+        Key_MEM[2]  <= 'b0;
+        Key_MEM[3]  <= 'b0;
+        Key_MEM[4]  <= 'b0;
+        Key_MEM[5]  <= 'b0;
+        Key_MEM[6]  <= 'b0;
+        Key_MEM[7]  <= 'b0;
+        Key_MEM[8]  <= 'b0;
+        Key_MEM[9]  <= 'b0;
+        Key_MEM[10] <= 'b0;
+        Key_MEM[11] <= 'b0;
     end
     else if(write_en && !key_lock) begin
         Key_MEM[Wr_Addr] <= write_data;

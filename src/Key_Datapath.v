@@ -15,7 +15,7 @@ wire done_reg_out, done_reg_in;
 
 KeyExpansion KExp(.key_in(KE_in), 
                   .mode(mode), 
-                  .roundVal(Wr_Addr), 
+                  .roundVal(Wr_Addr+1), 
                   .key_out(KE_out)
                 );
 
