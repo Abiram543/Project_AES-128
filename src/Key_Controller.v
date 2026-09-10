@@ -1,9 +1,11 @@
 module Key_Controller (
     input wire crypto_clk, crypto_rstn,
     input wire start, key_lock,
+    input wire key_written,
     output reg [3:0] Wr_Addr,
     output wire start_aes,
-    output reg key_reg_sel, write_en, key_store_done, KE_sel
+    output reg key_reg_sel, write_en, key_store_done, 
+    output reg KE_sel
 );
 //-------------parameterization-------//
 localparam IDLE     = 2'd0,
@@ -31,7 +33,7 @@ end
 //------------Next State Logic----------//
 always @(*) begin
     case (PS)
-        IDLE: NS = (start && !key_lock) ? INIT : IDLE;
+        IDLE: NS = (start && !key_lock && !key_written) ? INIT : IDLE;
         INIT: NS = STORE;
         STORE: NS = count11 ? DONE : STORE;
         DONE: NS = IDLE;
@@ -50,7 +52,7 @@ always @(*) begin
             key_store_done = 0;
         end 
         INIT: begin
-            Wr_Addr = 4'd1;
+            Wr_Addr = 'b0;
             KE_sel = 0;
             key_reg_sel = 0;    // It will select the original key value
             write_en = 0;
@@ -98,10 +100,10 @@ always @(posedge crypto_clk or negedge crypto_rstn) begin
     end
 end
 // Temp assignments to overcome lint errors
-assign Round_state = (PS == INIT) || (PS == STORE);
+assign Round_state = (PS == STORE);
 assign count11 = (roundVal == 4'd11);    // roundVal 0-10
 
 //Control signal for start the aes_core part
-assign start_aes = count11 ? 1'b1 : 1'b0;
+assign start_aes = (PS == DONE);
 
 endmodule

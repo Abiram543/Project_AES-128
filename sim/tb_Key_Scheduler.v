@@ -1,4 +1,24 @@
-`timescale 1ns / 1ps
+`timescale 1ns / 1ps 
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 20.08.2026 13:02:18
+// Design Name: 
+// Module Name: tb_Key_Scheduler
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
 
 module tb_Key_Scheduler();
 reg crypto_clk, crypto_rstn;
@@ -45,10 +65,26 @@ initial begin
     read_en = 1;
     @(posedge crypto_clk);
     Rd_Addr = 4'd3;
+    @(posedge crypto_clk);
+    Rd_Addr = 4'd4;
+    @(posedge crypto_clk);
+    Rd_Addr = 4'd5;
+    @(posedge crypto_clk);
+    Rd_Addr = 4'd6;
+    @(posedge crypto_clk);
+    Rd_Addr = 4'd7;
+    @(posedge crypto_clk);
+    Rd_Addr = 4'd8;
+    @(posedge crypto_clk);
+    Rd_Addr = 4'd9;
+    @(posedge crypto_clk);
+    Rd_Addr = 4'd10;
+    @(posedge crypto_clk);
+    Rd_Addr = 4'd11;
     read_en = 1;
     #5 $finish;
 end
 initial begin
-    $monitor(" RoundKey = %h | AES_Start = %h | Done = %h | Key_reg = %h", Roundkey, start_aes, key_store_done, dut.U2.K1.D_out);
+    $monitor(" RoundKey = %h | AES_Start = %h | Done = %h | Key_reg = %h", Roundkey, start_aes, key_store_done, dut.Key_Dpt.K1.D_out);
 end
 endmodule

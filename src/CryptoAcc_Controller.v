@@ -2,6 +2,7 @@ module CryptoAcc_Controller (
     input wire crypto_clk, crypto_rstn,
     input wire start, start_aes,
     input wire fifo_empty_flag,
+    input wire next_process,
     output reg [3:0] Rd_Addr,
     output reg read_en, busy_flag, done_flag
 );
