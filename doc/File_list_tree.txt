@@ -33,5 +33,6 @@ Core_top.v
                             -....
                 -Key_ROM.v
                 -Reg_128.v
+                -Reg_1.v
 
 

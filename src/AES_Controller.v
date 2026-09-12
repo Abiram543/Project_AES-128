@@ -5,7 +5,7 @@ module AES_Controller_v2 (
 //Generating Control Signals//    
     output reg [2:0] ARK_sel, IARK_sel,
     output reg [1:0] SB_sel, state_sel,
-    output reg SR_sel, ISR_sel, MC_sel, IMC_sel, Data_sel, out_sel, key_sel, ARK_key_sel, IARK_key_sel,
+    output reg SR_sel, ISR_sel, MC_sel, IMC_sel, Data_sel, out_sel, ARK_key_sel, IARK_key_sel,
 //status signal//    
     output reg done,
     output reg [3:0] Rd_Addr,
@@ -86,7 +86,6 @@ always @(*) begin
             Data_sel = 0;
             state_sel = 'b0;
             out_sel = 0;
-            key_sel = 0;
             ARK_key_sel = 'b0;
             IARK_key_sel = 'b0;
             done = 0;
@@ -104,7 +103,6 @@ always @(*) begin
             Data_sel = 1;
             state_sel = 'b0;
             out_sel = 0;
-            key_sel = 1;
             ARK_key_sel = 0;
             IARK_key_sel = 0;
             Rd_Addr = mode ? 0 : 4'd10;
@@ -115,7 +113,6 @@ always @(*) begin
             Data_sel = 0;
             done = 0;
             out_sel = 0;
-            key_sel = 1;
             Rd_Addr = mode ? count : (4'd10 - count);
             read_en = 1;
             // if (mode) begin
@@ -152,7 +149,6 @@ always @(*) begin
         R1_9: begin
             Data_sel = 0;
             done = 0;
-            key_sel = 1;
             out_sel = 0;
             ARK_key_sel = mode ? 1'b1 : 'b0;
             IARK_key_sel = !mode ? 1'b1 : 'b0;
@@ -189,7 +185,6 @@ always @(*) begin
             Data_sel = 0;
             done = 0;
             out_sel = 0;
-            key_sel = 0;
             ARK_key_sel = mode ? 1'b1 : 'b0;
             IARK_key_sel = !mode ? 1'b1 : 'b0;
             ARK_sel = mode ? 2'd3 : 'b0;
@@ -230,7 +225,6 @@ always @(*) begin
             Data_sel = 0;
             state_sel = 'b0;
             out_sel = 1;
-            key_sel = 0;
             ARK_key_sel = 'b0;
             IARK_key_sel = 'b0;
             done = 1;
@@ -248,7 +242,6 @@ always @(*) begin
             Data_sel = 0;
             state_sel = 'b0;
             out_sel = 0;
-            key_sel = 0;
             ARK_key_sel = 'b0;
             IARK_key_sel = 'b0;
             done = 0;
