@@ -2,6 +2,7 @@ module AES_Controller_v2 (
     input wire crypto_clk, crypto_rstn,
     input wire start,            // Start the AES process
     input wire mode,            // mode = 1 --> Encryption, mode = 0 --> Decryption
+    input wire zeroize,
 //Generating Control Signals//    
     output reg [2:0] ARK_sel, IARK_sel,
     output reg [1:0] SB_sel, state_sel,
@@ -30,6 +31,9 @@ wire count11;
 //Present state Logic//
 always @(posedge crypto_clk or negedge crypto_rstn) begin
     if (!crypto_rstn) begin
+        PS <= IDLE;
+    end
+    else if (zeroize)
         PS <= IDLE;
     end
     else begin

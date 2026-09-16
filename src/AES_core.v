@@ -1,7 +1,7 @@
 module AES_core (
     input wire crypto_clk, crypto_rstn,
     input wire start,            // Start the AES process
-    input wire mode,
+    input wire mode, zeroize,
     input wire [127:0] key_in,     // round key from Key scheduler
     input wire [127:0] Data_in,  // Plaintext/Ciphertext
 //--------------Data output from AES------//
@@ -20,6 +20,7 @@ AES_Controller_v2 AES_Ctrl(.crypto_clk(crypto_clk),
                            .crypto_rstn(crypto_rstn), 
                            .start(start), 
                            .mode(mode), 
+                           .zeroize(zeroize),
                            .ARK_sel(ARK_sel), 
                            .SB_sel(SB_sel), 
                            .state_sel(state_sel), 
@@ -40,6 +41,7 @@ AES_Controller_v2 AES_Ctrl(.crypto_clk(crypto_clk),
 AES_Datapath_v2 AES_Dtp(.crypto_clk(crypto_clk), 
                         .crypto_rstn(crypto_rstn), 
                         .mode(mode), 
+                        .zeroize(zeroize),
                         .key_in(key_in), 
                         .Data_in(Data_in), 
                         .ARK_sel(ARK_sel), 

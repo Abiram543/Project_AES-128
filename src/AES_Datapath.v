@@ -1,6 +1,7 @@
 module AES_Datapath_v2 (
     input wire crypto_clk, crypto_rstn,
     input wire mode,                // mode = 1 -> Encryption | mode = 0 -> Decryption
+    input wire zeroize,
     input wire [127:0] key_in,      // round key from Key scheduler
     input wire [127:0] Data_in,     // Plaintext/Ciphertext
 //Control signals from Controller//
@@ -24,7 +25,7 @@ wire [127:0] temp_reg_in, temp_reg_out;
 // Datapath modules instantiation
 //-----------------------------------------------------------------------------------------------------
 /*Input registers*/
-Reg_128 I1(.crypto_clk(crypto_clk), .crypto_rstn(crypto_rstn), .D_in(Din_reg), .D_out(Dout_reg));
+Reg_128 I1(.crypto_clk(crypto_clk), .crypto_rstn(crypto_rstn), .zeroize(zeroize), .D_in(Din_reg), .D_out(Dout_reg));
 
 //Reg_1   I2(.crypto_clk(crypto_clk), .crypto_rstn(crypto_rstn), .D_in(mode_in), .D_out(mode_out));
 
@@ -57,7 +58,7 @@ InvShiftRows U6(.A(ISR_A), .Q(ISR_Q));
 InvMixColumns U7(.A(IMC_A), .Q(IMC_Q));
 
 //State Register//
-Reg_128 O1(.crypto_clk(crypto_clk), .crypto_rstn(crypto_rstn), .D_in(state_in), .D_out(state_reg));
+Reg_128 O1(.crypto_clk(crypto_clk), .crypto_rstn(crypto_rstn), .zeroize(zeroize), .D_in(state_in), .D_out(state_reg));
 
 //----------------------------------------------------------------------------------------------------------
 
@@ -104,5 +105,5 @@ assign state_in = (state_sel == 2'd1) ? ARK_Q :     // Encryption: All rounds
 assign temp_reg_in = out_sel ? state_reg : temp_reg_out;    // Output Registering
 assign Data_out = temp_reg_out;
 
-Reg_128 O2(.crypto_clk(crypto_clk), .crypto_rstn(crypto_rstn), .D_in(temp_reg_in), .D_out(temp_reg_out));
+Reg_128 O2(.crypto_clk(crypto_clk), .crypto_rstn(crypto_rstn), .zeroize(zeroize), .D_in(temp_reg_in), .D_out(temp_reg_out));
 endmodule

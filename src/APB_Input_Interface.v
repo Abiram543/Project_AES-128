@@ -8,6 +8,10 @@ module APB_Input_Interface (
     input  wire        PWRITE,
     input  wire [31:0] PWDATA,
     input  wire [2:0]  PPROT,
+    
+    input wire         Rx_empty_delay,  // Comes from Rx-FIFO Empty signal delayed 
+    input wire [127:0] Rx_Data_out,
+    input wire         done_flag_sync, busy_flag_sync,  // Comes from Core --> Synchronized with pclk domain  
 
     output reg  [127:0] privatekey,
     output reg          Key_Valid,
@@ -17,11 +21,15 @@ module APB_Input_Interface (
     output reg          mode_Valid,
     output reg          KEYLOCK,
     output reg          ZEROIZE,
-    output reg          START
+    output reg          START,
+    output reg          SEC_VIOLATION,
+    output reg          PSLVERR,
+    output reg          PRDATA
 );
 
 // Register Map
-localparam ADDR_CONTROL     = 8'h04,
+localparam ADDR_CONTROL     = 8'h00,
+           ADDR_STATUS      = 8'h04,
  
            ADDR_KEY0        = 8'h08,
            ADDR_KEY1        = 8'h0C,
@@ -31,7 +39,12 @@ localparam ADDR_CONTROL     = 8'h04,
            ADDR_DATA_IN0    = 8'h18,
            ADDR_DATA_IN1    = 8'h1C,
            ADDR_DATA_IN2    = 8'h20,
-           ADDR_DATA_IN3    = 8'h24;
+           ADDR_DATA_IN3    = 8'h24,
+
+           ADDR_DATA_OUT0   = 8'h28,
+           ADDR_DATA_OUT1   = 8'h2C,
+           ADDR_DATA_OUT2   = 8'h30,
+           ADDR_DATA_OUT3   = 8'h34;
 
 // Registers
 reg [31:0] KEY0;
@@ -44,14 +57,23 @@ reg [31:0] DATA_IN1;
 reg [31:0] DATA_IN2;
 reg [31:0] DATA_IN3;
 
+// AES output registers
+reg [31:0] DATA_OUT0;
+reg [31:0] DATA_OUT1;
+reg [31:0] DATA_OUT2;
+reg [31:0] DATA_OUT3;
+
+reg DONE, BUSY;
 // Temp reg
 reg keylock;
 
 
-// Write operation can start when apb_write is valid
-wire apb_write;
+// Write operation can start when apb_write is valid & 
+//Read operation can start when apb_read is valid
+wire apb_write, apb_read;
 
 assign apb_write = PSEL && PENABLE && PWRITE;
+assign apb_read  = PSEL && PENABLE && !PWRITE;
 
 wire [127:0] KEY, DATA;
 reg MODE;
@@ -81,7 +103,7 @@ always @(posedge PCLK or negedge PRESETn) begin
         START    <= 'b0;
         MODE     <= 'b0;
         KEYLOCK  <= 'b0;
-        ZEROIZE  <= 'b0;
+        ZEROIZE  <= 'b0; 
     end
     else if (ZEROIZE) begin
         KEY0     <= 'b0;
@@ -94,7 +116,7 @@ always @(posedge PCLK or negedge PRESETn) begin
         DATA_IN3 <= 'b0;
         START    <= 'b0;
         MODE     <= 'b0;
-        KEYLOCK  <= 'b0;
+        KEYLOCK  <= 'b0;    
     end
     else begin
         if (apb_write && PPROT[0]) begin
@@ -157,14 +179,26 @@ always @(posedge PCLK or negedge PRESETn) begin
                 ADDR_KEY0:begin
                     word_count <= 'b0;
                 end
-                ADDR_KEY1, ADDR_KEY2, ADDR_KEY3:begin
-                    word_count <= word_count + 1;
+                ADDR_KEY1:begin
+                    word_count <= 2'd1;
+                end
+                ADDR_KEY2:begin
+                    word_count <= 2'd2;
+                end
+                ADDR_KEY3:begin
+                    word_count <= 2'd3;
                 end 
                 ADDR_DATA_IN0:begin
                     word_count <= 'b0;
                 end
-                ADDR_DATA_IN1, ADDR_DATA_IN2, ADDR_DATA_IN3:begin
-                    word_count <= word_count + 1;
+                ADDR_DATA_IN1:begin
+                    word_count <= 2'd1;
+                end
+                ADDR_DATA_IN2:begin
+                    word_count <= 2'd2;
+                end
+                ADDR_DATA_IN3:begin
+                    word_count <= 2'd3;
                 end
                 default: word_count <= 'b0;
             endcase
@@ -247,4 +281,96 @@ always @(posedge PCLK or negedge PRESETn ) begin
     end
 end
 
+// PSLVERR AND SEC_VIOLATION LOGIC
+always @ * begin
+    if(apb_read || apb_write) begin
+        case (PADDR)
+        ADDR_CONTROL, ADDR_KEY0, ADDR_KEY1, ADDR_KEY2, ADDR_KEY3, ADDR_DATA_IN0, ADDR_DATA_IN1, ADDR_DATA_IN2, ADDR_DATA_IN3:begin
+            PSLVERR = PPROT[0] ? 0 : 1;
+        end 
+        ADDR_STATUS, ADDR_DATA_OUT0, ADDR_DATA_OUT1, ADDR_DATA_OUT2, ADDR_DATA_OUT3: begin
+            PSLVERR = 0;
+        end
+        default: PSLVERR = 1;
+        endcase
+    end
+    else PSLVERR = 0;
+end
+
+//SEC_VIOLATION logic
+always @(posedge PCLK or negedge PRESETn ) begin
+    if (!PRESETn) begin
+        SEC_VIOLATION <= 'b0;
+    end
+    else begin
+        SEC_VIOLATION <= PSLVERR ? 1'b1 : SEC_VIOLATION;
+    end
+end
+
+// Output Read from Rx FIFO logic
+reg [2:0] count;
+// Rx Read ena logic
+always @ (posedge PCLK or negedge PRESETn) begin
+    if(!PRESETn) begin
+        count <= 'b0;
+    end
+    else begin
+        if(!Rx_empty_delay && done_flag_sync && !PWRITE)begin
+            if(count == 3'd4)
+                count <= 'b0;
+            else
+                count <= count + 1;
+        end
+        else count <= 'b0;
+    end
+end
+
+assign Rx_rd_en = (count == 3'd1);
+
+always @ (posedge PCLK or negedge PRESETn) begin
+    if(!PRESETn) begin
+        {DATA_OUT0, DATA_OUT1, DATA_OUT2, DATA_OUT3} <= 'b0;
+    end
+    else if (Rx_rd_en) begin
+        {DATA_OUT0, DATA_OUT1, DATA_OUT2, DATA_OUT3} <= Rx_Data_out;
+    end
+end 
+
+// DONE signal logic
+// BUSY signal logic
+always @ (posedge PCLK or negedge PRESETn) begin
+    if(!PRESETn) begin
+        DONE <= 0;
+        BUSY <= 0;
+    end
+    else begin
+        DONE <= done_flag_sync;
+        BUSY <= busy_flag_sync;
+    end
+end
+
+// PRDATA read Transaction
+always @ (*) begin
+    if(apb_read) begin
+        case(PADDR)
+        ADDR_DATA_OUT0: begin
+            PRDATA = DATA_OUT0;
+        end
+        ADDR_DATA_OUT1: begin
+            PRDATA = DATA_OUT1;
+        end
+        ADDR_DATA_OUT2: begin
+            PRDATA = DATA_OUT2;
+        end
+        ADDR_DATA_OUT3: begin
+            PRDATA = DATA_OUT3;
+        end
+        ADDR_STATUS: begin
+            PRDATA = {30'd0, BUSY, DONE};
+        end
+        default: PRDATA = 'b0;
+        endcase
+   end
+   else PRDATA = 'b0;
+end
 endmodule

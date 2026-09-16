@@ -1,7 +1,7 @@
 module Key_Datapath (
     input wire crypto_clk, crypto_rstn,
     input wire [127:0] Key,
-    input wire mode, zeroize, key_lock,
+    input wire mode, zeroize,
     input wire key_reg_sel, read_en, write_en, 
     input wire KE_sel,
     input wire [3:0] Wr_Addr, Rd_Addr,
@@ -23,7 +23,6 @@ Key_ROM KRom(.crypto_clk(crypto_clk),
              .crypto_rstn(crypto_rstn), 
              .zeroize(zeroize), 
              .write_en(write_en), 
-             .key_lock(key_lock), 
              .read_en(read_en), 
              .write_data(KR_in), 
              .read_data(KR_out), 
@@ -34,12 +33,14 @@ Key_ROM KRom(.crypto_clk(crypto_clk),
 //------------------------Key Register for feedback---------------------------------------------//
 Reg_128 R128(.crypto_clk(crypto_clk), 
              .crypto_rstn(crypto_rstn), 
+             .zeroize(zeroize),
              .D_in(reg_in), 
              .D_out(reg_out)
              );
 
 Reg_1 R1(.crypto_clk(crypto_clk), 
              .crypto_rstn(crypto_rstn), 
+             .zeroize(zeroize),
              .D_in(done_reg_in), 
              .D_out(done_reg_out)
              );

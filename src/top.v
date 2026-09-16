@@ -1,116 +1,76 @@
-module top (
-//Inputs from APB Master
-    input  wire        PCLK,
-    input  wire        PRESETn,
-    input  wire [7:0]  PADDR,
-    input  wire        PSEL,
-    input  wire        PENABLE,
-    input  wire        PWRITE,
-    input  wire [31:0] PWDATA,
-    input  wire [3:0]  PSTRB,
-    input  wire [2:0]  PPROT,
-// For Core inputs 
-    input wire         crypto_clk,
-    input wire         crypto_rstn,
-//Outputs to APB Master
-    output wire        PSLVERR,
-    output wire        SEC_VIOLATION,
-    output wire [31:0] PRDATA,
-    output wire        PREADY
+module top();
+
+APB_Input_Interface dut1(
+    .PCLK(PCLK),
+    .PRESETn(PRESETn),
+    .PADDR(PADDR),
+    .PSEL(PSEL),
+    .PENABLE(PENABLE),
+    .PWRITE(PWRITE),
+    .PWDATA(PWDATA),
+    .PPROT(PPROT),
+    . privatekey(privatekey),
+    . Key_Valid(Key_Valid),
+    . plaintxt(plaintxt),
+    . Data_Valid(Data_Valid),
+    . mode(mode),
+    . mode_Valid(mode_Valid),
+    . KEYLOCK(KEYLOCK),
+    . ZEROIZE(ZEROIZE),
+    . START(START)
 );
 
-APB_Interface APB_Itf(.PCLK(PCLK),
-                       .PRESETn(PRESETn),
-                       .PADDR(PADDR),
-                       .PSEL(PSEL),
-                       .PENABLE(PENABLE),
-                       .PWRITE(PWRITE),
-                       .PWDATA(PWDATA),
-                       .PSTRB(PSTRB),
-                       .PPROT(PPROT),
-                       .done_flag_sync(core_done_flag), 
-                       .busy_flag_sync(core_busy_flag),
-                       .RxData_out(Rx_Data_out),
-                       .PRDATA(PRDATA),
-                       .PREADY(PREADY),
-                       .PSLVERR(PSLVERR),
-                       .SEC_VIOLATION(SEC_VIOLATION),
-                       .KEY(KEY),
-                       .DATA(plaintxt),
-                       .START(START), 
-                       .MODE(MODE),
-                       .KEYLOCK(KEYLOCK),
-                       .ZEROIZE(ZEROIZE),
-                       .DATA_WRITE_DONE(DATA_WRITE_DONE),
-                       .DONE(DONE)
-                    );
 
-// Secure Register for KEY and MODE
-Secure_Reg SR(.PCLK(PCLK),
-              .PRESETn(PRESETn),
-              .KEYLOCK(KEYLOCK),
-              .MODE(MODE),
-              .KEY(KEY),
-              .mode(mode),
-              .keylock(keylock),
-              .private_key(private_key)
-            );
+sync2ff start(.D(START),.rst(crypto_rstn),.clk(crypto_clk),.q(start_sync));     // Start signal sync
+sync2ff mode(.D(mode),.rst(crypto_rstn),.clk(crypto_clk),.q(mode_sync));        // Mode signal sync
+sync2ff zeroize(.D(ZEROIZE),.rst(crypto_rstn),.clk(crypto_clk),.q(zeroize_sync));   // Zeroize signal sync
 
-// Tx FIFO 
-wire Tx_rd_en, Tx_wr_en;
-assign Tx_rd_en = aes_done || key_store_done; 
-assign Tx_wr_en = DATA_WRITE_DONE;                   
+mux_sync key(.clk(crypto_clk), .rstn(crypto_rstn), .Din(privatekey), .ena(Key_Valid), .Dout(privatekey_sync));     // Private Key sync.
 
-fifo_top TxFIFO(.rclk(crypto_clk), 
-                .rd_en(Tx_rd_en), 
+async_fifo TxFIFO(.rclk(crypto_clk), 
+                .ren(Tx_rd_en),        // Once aes_done rd_en = 1
                 .wclk(PCLK), 
-                .wr_en(Tx_wr_en),              
-                .rdrstn(crypto_rstn), 
-                .wrstn(PRESETn),            
-                .Data_in(plaintxt), 
+                .wen(Data_Ready),              
+                .rrst(crypto_rstn), 
+                .wrst(PRESETn),            
+                .write_datain(plaintxt), 
                 .full(Tx_full),                    
                 .empty(Tx_empty),                   
-                .Data_out(Tx_Data_out)
+                .read_dataout(Tx_RDATA)
              );
 
-//CDC for Key and Control signals
+always @ (posedge PCLK or negedge PRESETn) begin
+    if(!PRESETn) begin
+        Key <= 'b0;
+        Mode <= 'b0;
+        Data_Ready <= 'b0;
+    end
+    else begin
+        Data_Ready <= Data_Valid;
+    end
+end 
 
-//Core Instantiation
+
+// Core Instantiation
 Core_top core(
     .crypto_clk(crypto_clk), 
     .crypto_rstn(crypto_rstn),
-    .start(START), 
-    .mode(mode),
-    .key_lock(keylock), 
-    .zeroize(ZEROIZE), 
+    .start(start_sync), 
+    .mode(mode_sync),
+    .zeroize(zeroize_sync), 
     .fifo_empty_flag(Tx_empty), 
-    .private_key(private_key),
-    .Data_in(Tx_Data_out),
-    .Data_out(Core_Data_out),
-    .busy_flag(core_busy_flag), 
-    .done_flag(core_done_flag),
+    .private_key(privatekey_sync),
+    .Data_in(Tx_RDATA),
+    .Data_out(Data_out),
+    .busy_flag(busy_flag), 
+    .done_flag(done_flag),
     .aes_done(aes_done), 
     .key_store_done(key_store_done)
 );
 
-wire Rx_wr_en, Rx_rd_en;
-assign Rx_wr_en = core_done_flag;
-assign Rx_rd_en = DONE;
+DFF aes_done_sync(.clk(crypto_clk), .rstn(crypto_rstn), .Din(aes_done), .Dout(Tx_rd_en));
 
-//Rx FIFO
-fifo_top RxFIFO(.rclk(PCLK), 
-                .rd_en(Rx_rd_en), 
-                .wclk(crypto_clk), 
-                .wr_en(Rx_wr_en),              
-                .rdrstn(PRESETn), 
-                .wrstn(crypto_rstn),            
-                .Data_in(Core_Data_out), 
-                .full(Rx_full),                    
-                .empty(Rx_empty),                   
-                .Data_out(Rx_Data_out)
-             );
 
-// Synchronizers for STATUS Signals
 
-    
+
 endmodule

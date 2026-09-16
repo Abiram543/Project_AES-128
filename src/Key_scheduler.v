@@ -1,7 +1,7 @@
 module Key_scheduler (
     input wire crypto_clk, crypto_rstn,
     input wire mode, 
-    input wire start, key_lock, zeroize,
+    input wire start, zeroize,
     input wire [127:0] Key,     // Original private key
     input wire [3:0] Rd_Addr,
     input wire read_en,
@@ -17,8 +17,8 @@ wire [3:0] Wr_Addr;
 
 Key_Controller Key_Ctrl(.crypto_clk(crypto_clk), 
                         .crypto_rstn(crypto_rstn), 
-                        .start(start), 
-                        .key_lock(key_lock), 
+                        .start(start),  
+                        .zeroize(zeroize),
                         .key_written(key_written),
                         .KE_sel(KE_sel), 
                         .Wr_Addr(Wr_Addr), 
@@ -31,7 +31,6 @@ Key_Datapath Key_Dpt(.crypto_clk(crypto_clk),
                      .crypto_rstn(crypto_rstn), 
                      .mode(mode), 
                      .key_reg_sel(key_reg_sel), 
-                     .key_lock(key_lock),
                      .KE_sel(KE_sel), 
                      .write_en(write_en), 
                      .read_en(read_en), 

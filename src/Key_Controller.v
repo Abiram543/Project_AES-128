@@ -1,6 +1,6 @@
 module Key_Controller (
     input wire crypto_clk, crypto_rstn,
-    input wire start, key_lock,
+    input wire start, zeroize,
     input wire key_written,
     output reg [3:0] Wr_Addr,
     output reg key_reg_sel, write_en, 
@@ -25,6 +25,9 @@ always @(posedge crypto_clk or negedge crypto_rstn) begin
     if (!crypto_rstn) begin
         PS <= IDLE;
     end
+    else if (zeroize) begin
+        PS <= IDLE;
+    end
     else begin
         PS <= NS;
     end
@@ -33,7 +36,7 @@ end
 //------------Next State Logic----------//
 always @(*) begin
     case (PS)
-        IDLE: NS = (start && !key_lock && !key_written) ? INIT : IDLE;
+        IDLE: NS = (start && !key_written) ? INIT : IDLE;
         INIT: NS = STORE;
         STORE: NS = count11 ? DONE : STORE;
         DONE: NS = IDLE;

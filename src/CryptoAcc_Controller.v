@@ -1,6 +1,6 @@
 module CryptoAcc_Controller (
     input wire crypto_clk, crypto_rstn,
-    input wire start, aes_done,
+    input wire start, aes_done, zeroize,
     input wire fifo_empty_flag, 
     input wire key_written, key_store_done,
     output reg busy_flag, done_flag, start_aes
@@ -22,6 +22,9 @@ reg [2:0] PS, NS;
 /* Present state logic */
 always @(posedge crypto_clk or negedge crypto_rstn) begin
     if (!crypto_rstn) begin
+        PS <= IDLE;
+    end
+    else if (zeroize) begin
         PS <= IDLE;
     end
     else begin
