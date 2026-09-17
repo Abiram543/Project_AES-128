@@ -33,7 +33,7 @@ always @(posedge crypto_clk or negedge crypto_rstn) begin
     if (!crypto_rstn) begin
         PS <= IDLE;
     end
-    else if (zeroize)
+    else if (zeroize) begin
         PS <= IDLE;
     end
     else begin

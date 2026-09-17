@@ -92,17 +92,6 @@ always @ (posedge PCLK or negedge PRESETn) begin
     end
 end
 
-reg done_flag_sync;
-// sync done_flag signal
-always @ (posedge PCLK or negedge PRESETn) begin
-    if(!PRESETn) begin
-        done_flag_sync <= 'b0;
-    end
-    else begin
-        done_flag_sync <= done_flag;
-    end
-    
-end
 
 reg [2:0] count;
 // Rx Read ena logic

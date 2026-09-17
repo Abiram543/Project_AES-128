@@ -1,38 +1,55 @@
-Core_top.v
-    -CryptoAcc_Controller.v
-    -CryptoAcc_Datapath.v
-        -AES_core.v
-            -AES_Controller.v
-            -AES_Datapath.v
-                -Reg_128.v
-                -Reg_1.v
-                -InvMixColumns.v
-                -InvShiftRows.v
-                -AddRoundKey.v
-                -MixColumns.v
-                -ShiftRows.v
-                -SubBytes.v
-                    -sbox_rom.v
-                    -sbox_comb.v
-                        -SELECT_NOT_8.v
-                            -MUX21I.v
-                        -GF_INV_8.v
-                            -GF_INV_4.v
-                                -GF_MULS_2.v
-                                -GF_SQ_2.v
-                            -GF_MULS_4.v
-                                -GF_MULS_2.v
-                                -GF_MULS_SCL_2.v                       
-        -Key_Scheduler.v
-            -Key_Controller.v
-            -Key_Datapath.v
-                -KeyExpansion.v
-                    -Rcon.v
-                    -gbox.v
+top1.v
+    -Interface1.v
+    -sync_2ff.v
+    -mux_sync.v
+        -DFF.v
+        -sync_2ff.v
+    -fifo_top.v
+        -fifo_mem.v
+        -wr_ptr_handler.v
+            -DFF.v
+        -rd_ptr_handler.v
+            -DFF.v
+        -sync_2ff.v
+    -DFF.v
+    -pulse_stretcher.v
+        -DFF.v
+    -Core_top.v
+        -CryptoAcc_Controller.v
+        -CryptoAcc_Datapath.v
+            -AES_core.v
+                -AES_Controller.v
+                -AES_Datapath.v
+                    -Reg_128.v
+                    -Reg_1.v
+                    -InvMixColumns.v
+                    -InvShiftRows.v
+                    -AddRoundKey.v
+                    -MixColumns.v
+                    -ShiftRows.v
+                    -SubBytes.v
+                        -sbox_rom.v
                         -sbox_comb.v
-                            -....
-                -Key_ROM.v
-                -Reg_128.v
-                -Reg_1.v
-
-
+                            -SELECT_NOT_8.v
+                                -MUX21I.v
+                            -GF_INV_8.v
+                                -GF_INV_4.v
+                                    -GF_MULS_2.v
+                                    -GF_SQ_2.v
+                                -GF_MULS_4.v
+                                    -GF_MULS_2.v
+                                    -GF_MULS_SCL_2.v                       
+            -Key_Scheduler.v
+                -Key_Controller.v
+                -Key_Datapath.v
+                    -KeyExpansion.v
+                        -Rcon.v
+                        -gbox.v
+                            -sbox_comb.v
+                                -....
+                    -Key_ROM.v
+                    -Reg_128.v
+                    -Reg_1.v
+    
+    
+    

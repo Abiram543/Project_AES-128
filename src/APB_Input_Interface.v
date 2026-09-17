@@ -10,6 +10,7 @@ module APB_Input_Interface (
     input  wire [2:0]  PPROT,
     
     input wire         Rx_empty_delay,  // Comes from Rx-FIFO Empty signal delayed 
+    input wire         Tx_full,
     input wire [127:0] Rx_Data_out,
     input wire         done_flag_sync, busy_flag_sync,  // Comes from Core --> Synchronized with pclk domain  
 
@@ -24,7 +25,8 @@ module APB_Input_Interface (
     output reg          START,
     output reg          SEC_VIOLATION,
     output reg          PSLVERR,
-    output reg          PRDATA
+    output reg          PRDATA,
+    output reg          READ_POP
 );
 
 // Register Map
@@ -44,7 +46,9 @@ localparam ADDR_CONTROL     = 8'h00,
            ADDR_DATA_OUT0   = 8'h28,
            ADDR_DATA_OUT1   = 8'h2C,
            ADDR_DATA_OUT2   = 8'h30,
-           ADDR_DATA_OUT3   = 8'h34;
+           ADDR_DATA_OUT3   = 8'h34
+           
+           ADDR_READ_POP    = 8'h38;
 
 // Registers
 reg [31:0] KEY0;
@@ -67,12 +71,14 @@ reg DONE, BUSY;
 // Temp reg
 reg keylock;
 
+reg READ_POP;
+
 
 // Write operation can start when apb_write is valid & 
 //Read operation can start when apb_read is valid
 wire apb_write, apb_read;
 
-assign apb_write = PSEL && PENABLE && PWRITE;
+assign apb_write = PSEL && PENABLE && PWRITE && !BUSY && !Tx_full;
 assign apb_read  = PSEL && PENABLE && !PWRITE;
 
 wire [127:0] KEY, DATA;
@@ -150,6 +156,9 @@ always @(posedge PCLK or negedge PRESETn) begin
                 end
                 ADDR_DATA_IN3:begin
                     DATA_IN3 <= PWDATA;
+                end
+                ADDR_READ_POP:begin
+                    READ_POP <= PWDATA[0];
                 end
                 default: begin
                    // nOTHING IS DONE
@@ -249,9 +258,6 @@ always @(posedge PCLK or negedge PRESETn ) begin
     if (!PRESETn) begin
         keylock <= 'b0;
     end
-    else if (ZEROIZE) begin
-        keylock <= 'b0;
-    end
     else if (KEYLOCK) begin
         keylock <= 1;
     end
@@ -315,7 +321,7 @@ always @ (posedge PCLK or negedge PRESETn) begin
         count <= 'b0;
     end
     else begin
-        if(!Rx_empty_delay && done_flag_sync && !PWRITE)begin
+        if(!Rx_empty_delay && READ_POP && !PWRITE && Valid_Read)begin
             if(count == 3'd4)
                 count <= 'b0;
             else
@@ -325,7 +331,7 @@ always @ (posedge PCLK or negedge PRESETn) begin
     end
 end
 
-assign Rx_rd_en = (count == 3'd1);
+assign Rx_rd_en = (count == 3'd4);
 
 always @ (posedge PCLK or negedge PRESETn) begin
     if(!PRESETn) begin
@@ -350,27 +356,60 @@ always @ (posedge PCLK or negedge PRESETn) begin
 end
 
 // PRDATA read Transaction
+always @ (posedge PCLK or negedge PRESETn) begin
+    if(!PRESETn) begin
+        PRDATA <= 'b0;
+    end
+    else begin
+        if(apb_read) begin
+            case(PADDR)
+            ADDR_DATA_OUT0: begin
+                PRDATA <= DATA_OUT0;
+            end
+            ADDR_DATA_OUT1: begin
+                PRDATA <= DATA_OUT1;
+            end
+            ADDR_DATA_OUT2: begin
+                PRDATA <= DATA_OUT2;
+            end
+            ADDR_DATA_OUT3: begin
+                PRDATA <= DATA_OUT3;
+            end
+            ADDR_STATUS: begin
+                PRDATA <= {30'd0, BUSY, DONE};
+            end
+            default: begin
+                PRDATA <= 'b0; 
+            end
+            endcase
+        end
+end
+
 always @ (*) begin
     if(apb_read) begin
         case(PADDR)
         ADDR_DATA_OUT0: begin
-            PRDATA = DATA_OUT0;
+            Valid_Read = 1;
         end
         ADDR_DATA_OUT1: begin
-            PRDATA = DATA_OUT1;
+            Valid_Read = 1;
         end
         ADDR_DATA_OUT2: begin
-            PRDATA = DATA_OUT2;
+            Valid_Read = 1;
         end
         ADDR_DATA_OUT3: begin
-            PRDATA = DATA_OUT3;
+            Valid_Read = 1;
         end
         ADDR_STATUS: begin
-            PRDATA = {30'd0, BUSY, DONE};
+            Valid_Read = 0;
         end
-        default: PRDATA = 'b0;
+        default: begin
+            Valid_Read = 0;
+        end
         endcase
-   end
-   else PRDATA = 'b0;
-end
+    end
+    else
+        Valid_Read = 0;
+    end
+    
 endmodule

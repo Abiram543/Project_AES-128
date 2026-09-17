@@ -1,7 +1,6 @@
 module Key_ROM (
     input wire crypto_clk, crypto_rstn,
-    input wire zeroize, 
-    input wire key_lock,
+    input wire zeroize,
     input wire write_en, read_en,
     input wire [127:0] write_data,
     input wire [3:0] Wr_Addr, Rd_Addr,
@@ -10,8 +9,6 @@ module Key_ROM (
 /*Key Register for 11 round keys*/
 reg [127:0] Key_MEM [0:11];
 
-//Temporory Vars//
-reg [3:0] i;
 
 //Write Logic//
 always @(posedge crypto_clk or negedge crypto_rstn) begin
@@ -43,7 +40,7 @@ always @(posedge crypto_clk or negedge crypto_rstn) begin
         Key_MEM[10] <= 'b0;
         Key_MEM[11] <= 'b0;
     end
-    else if(write_en && !key_lock) begin
+    else if(write_en) begin
         Key_MEM[Wr_Addr] <= write_data;
     end
     else begin
